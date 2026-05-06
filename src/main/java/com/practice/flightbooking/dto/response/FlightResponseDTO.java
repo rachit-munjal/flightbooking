@@ -2,10 +2,11 @@ package com.practice.flightbooking.dto.response;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
-public class FlightResponseDTO {
+public class FlightResponseDTO implements Serializable {
     private Long id;
     private String flightNumber;
     private String airline;
