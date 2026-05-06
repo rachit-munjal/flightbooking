@@ -1,5 +1,6 @@
 package com.practice.flightbooking.service;
 
+import com.practice.flightbooking.dto.BookingNotificationDTO;
 import com.practice.flightbooking.dto.request.BookingRequestDTO;
 import com.practice.flightbooking.dto.response.BookingResponseDTO;
 import com.practice.flightbooking.entity.Booking;
@@ -31,7 +32,7 @@ public class BookingService {
     private final FlightRepo flightRepo;
     private final BookingRepo bookingRepo;
     private final BookingMapper bookingMapper;
-    private final FlightMapper flightMapper;
+    private final NotificationProducer notificationProducer;
 
     @Transactional
     public BookingResponseDTO bookFlight(BookingRequestDTO request, String email){
@@ -53,6 +54,22 @@ public class BookingService {
         booking.setStatus(BookingStatus.CONFIRMED);
 
         Booking saved = bookingRepo.save(booking);
+
+        // send notification to RabbitMQ
+        BookingNotificationDTO notification = new BookingNotificationDTO(
+                saved.getId(),
+                user.getEmail(),
+                user.getName(),
+                flight.getFlightNumber(),
+                flight.getAirline(),
+                flight.getSource(),
+                flight.getDestination(),
+                flight.getDepartureTime(),
+                saved.getSeatsBooked(),
+                saved.getTotalPrice()
+        );
+        notificationProducer.sendBookingNotification(notification);
+
         return bookingMapper.entityToDTO(saved);
     }
 
