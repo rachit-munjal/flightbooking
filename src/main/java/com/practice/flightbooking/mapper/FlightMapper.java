@@ -14,8 +14,8 @@ public class FlightMapper {
         response.setAirline(flight.getAirline());
         response.setSource(flight.getSource());
         response.setDestination(flight.getDestination());
-        response.setDepartureTime(flight.getDepartureTime());
-        response.setArrivalTime(flight.getArrivalTime());
+        response.setDepartureTime(flight.getDepartureTime().toString());
+        response.setArrivalTime(flight.getArrivalTime().toString());
         response.setTotalSeats(flight.getTotalSeats());
         response.setAvailableSeats(flight.getAvailableSeats());
         response.setPrice(flight.getPrice());

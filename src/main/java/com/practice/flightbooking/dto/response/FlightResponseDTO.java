@@ -1,5 +1,6 @@
 package com.practice.flightbooking.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -12,8 +13,16 @@ public class FlightResponseDTO implements Serializable {
     private String airline;
     private String source;
     private String destination;
-    private LocalDateTime departureTime;
-    private LocalDateTime arrivalTime;
+
+//    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+//    private LocalDateTime departureTime;
+//
+//    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+//    private LocalDateTime arrivalTime;
+
+    private String arrivalTime;
+    private String departureTime;
+
     private Integer totalSeats;
     private Integer availableSeats;
     private Double price;
