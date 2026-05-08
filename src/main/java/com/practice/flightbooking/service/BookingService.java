@@ -18,6 +18,7 @@ import com.practice.flightbooking.repo.UserRepo;
 import com.practice.flightbooking.entity.User;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.awt.print.Book;
@@ -35,6 +36,7 @@ public class BookingService {
     private final NotificationProducer notificationProducer;
 
     @Transactional
+    @CacheEvict(value = "flights", allEntries = true)
     public BookingResponseDTO bookFlight(BookingRequestDTO request, String email){
         User user = userRepo.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found"));
         Flight flight = flightRepo.findById(request.getFlightId()).orElseThrow(() -> new FlightNotFoundException("Flight not found"));
@@ -79,6 +81,7 @@ public class BookingService {
     }
 
     @Transactional
+    @CacheEvict(value = "flights", allEntries = true)
     public BookingResponseDTO cancelBooking(Long bookingId, String email){
         User user = userRepo.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found"));
         Booking booking = bookingRepo.findByIdAndUserId(bookingId, user.getId()).orElseThrow(() -> new BookingNotFoundException("Booking not found"));
