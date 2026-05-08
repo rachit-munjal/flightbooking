@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyBook — Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
+
+        nav {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+        nav h1 { font-size: 22px; }
+        nav div { display: flex; gap: 15px; align-items: center; }
+        nav span { font-size: 14px; opacity: 0.9; }
+        nav button {
+            background: rgba(255,255,255,0.2);
+            border: none; color: white;
+            padding: 8px 16px; border-radius: 6px;
+            cursor: pointer; font-size: 13px;
+        }
+        nav button:hover { background: rgba(255,255,255,0.3); }
+
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+
+        .search-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .search-card h2 { margin-bottom: 20px; color: #333; }
+
+        .search-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group label {
+            display: block; margin-bottom: 6px;
+            color: #555; font-size: 14px; font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%; padding: 11px 14px;
+            border: 2px solid #e1e5e9; border-radius: 8px;
+            font-size: 14px; outline: none;
+        }
+
+        .form-group input:focus { border-color: #667eea; }
+
+        .btn-search {
+            padding: 11px 28px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; border: none; border-radius: 8px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .flights-section h2 { margin-bottom: 20px; color: #333; }
+
+        .flight-card {
+            background: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .flight-info h3 { color: #333; font-size: 18px; margin-bottom: 5px; }
+        .flight-info p { color: #888; font-size: 13px; }
+        .flight-route {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 8px 0;
+        }
+        .flight-route span { font-size: 16px; font-weight: 600; color: #444; }
+        .flight-route .arrow { color: #667eea; font-size: 20px; }
+
+        .flight-right { text-align: right; }
+        .price { font-size: 24px; font-weight: 700; color: #667eea; }
+        .seats { font-size: 13px; color: #888; margin-bottom: 10px; }
+
+        .btn-book {
+            padding: 9px 22px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+        }
+
+        .btn-book:disabled {
+            background: #ccc; cursor: not-allowed;
+        }
+
+        .empty { text-align: center; padding: 40px; color: #888; }
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            padding: 14px 20px; border-radius: 10px;
+            font-size: 14px; font-weight: 500; color: white;
+            display: none; z-index: 1000;
+        }
+        .toast.success { background: #28a745; }
+        .toast.error { background: #dc3545; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <h1>✈️ SkyBook</h1>
+    <div>
+        <span id="userName"></span>
+        <button onclick="location.href='bookings.html'">My Bookings</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="search-card">
+        <h2>🔍 Search Flights</h2>
+        <div class="search-row">
+            <div class="form-group">
+                <label>From</label>
+                <input type="text" id="source" placeholder="Delhi">
+            </div>
+            <div class="form-group">
+                <label>To</label>
+                <input type="text" id="destination" placeholder="Mumbai">
+            </div>
+            <button class="btn-search" onclick="searchFlights()">Search</button>
+        </div>
+    </div>
+
+    <div class="flights-section">
+        <h2 id="resultsTitle"></h2>
+        <div id="flightsList"></div>
+    </div>
+
+    <!-- ADMIN SECTION — hidden by default -->
+    <div id="adminSection" style="display:none; margin-top: 40px;">
+        <div class="search-card">
+            <h2>🛠️ Admin — Add New Flight</h2>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                <div class="form-group">
+                    <label>Flight Number</label>
+                    <input type="text" id="flightNumber" placeholder="AI101">
+                </div>
+                <div class="form-group">
+                    <label>Airline</label>
+                    <input type="text" id="airline" placeholder="Air India">
+                </div>
+                <div class="form-group">
+                    <label>Source</label>
+                    <input type="text" id="adminSource" placeholder="Delhi">
+                </div>
+                <div class="form-group">
+                    <label>Destination</label>
+                    <input type="text" id="adminDestination" placeholder="Mumbai">
+                </div>
+                <div class="form-group">
+                    <label>Departure Time</label>
+                    <input type="datetime-local" id="departureTime">
+                </div>
+                <div class="form-group">
+                    <label>Arrival Time</label>
+                    <input type="datetime-local" id="arrivalTime">
+                </div>
+                <div class="form-group">
+                    <label>Total Seats</label>
+                    <input type="number" id="totalSeats" placeholder="150">
+                </div>
+                <div class="form-group">
+                    <label>Price (₹)</label>
+                    <input type="number" id="flightPrice" placeholder="4500">
+                </div>
+            </div>
+            <button class="btn-search" onclick="addFlight()">➕ Add Flight</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'index.html';
+    document.getElementById('userName').textContent = '👤 ' + (localStorage.getItem('name') || '');
+
+    async function searchFlights() {
+        const source = document.getElementById('source').value.trim();
+        const destination = document.getElementById('destination').value.trim();
+
+        if (!source || !destination) {
+            showToast('Please enter source and destination', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `http://localhost:8080/api/flights/search?source=${source}&destination=${destination}&page=0&size=10`,
+                { headers: { 'Authorization': 'Bearer ' + token } }
+            );
+
+            const data = await response.json();
+
+            if (response.ok) {
+                displayFlights(data, source, destination);
+            } else {
+                showToast('Failed to search flights', 'error');
+            }
+        } catch (error) {
+            showToast('Server error', 'error');
+        }
+    }
+
+    function displayFlights(flights, source, destination) {
+        const title = document.getElementById('resultsTitle');
+        const list = document.getElementById('flightsList');
+
+        title.textContent = `Flights from ${source} to ${destination}`;
+
+        if (!flights || flights.length === 0) {
+            list.innerHTML = '<div class="empty">No flights found for this route.</div>';
+            return;
+        }
+
+        list.innerHTML = flights.map(flight => `
+            <div class="flight-card">
+                <div class="flight-info">
+                    <h3>${flight.airline}</h3>
+                    <div class="flight-route">
+                        <span>${flight.source}</span>
+                        <span class="arrow">→</span>
+                        <span>${flight.destination}</span>
+                    </div>
+                    <p>✈️ ${flight.flightNumber} &nbsp;|&nbsp; 🕐 ${flight.departureTime}</p>
+                </div>
+                <div class="flight-right">
+                    <div class="price">₹${flight.price}</div>
+                    <div class="seats">${flight.availableSeats} seats left</div>
+                    <button class="btn-book"
+                        ${flight.availableSeats === 0 ? 'disabled' : ''}
+                        onclick="bookFlight(${flight.id}, ${flight.price})">
+                        Book Now
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function bookFlight(flightId, price) {
+        const seats = prompt('How many seats do you want to book?');
+        if (!seats || isNaN(seats) || seats < 1) {
+            showToast('Invalid seat count', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:8080/api/bookings/book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ flightId: flightId, seatsBooked: parseInt(seats) })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showToast(`Booking confirmed! Total: ₹${data.totalPrice}`, 'success');
+                setTimeout(() => searchFlights(), 1500);
+            } else {
+                showToast(data.message || 'Booking failed', 'error');
+            }
+        } catch (error) {
+            showToast('Server error', 'error');
+        }
+    }
+
+    function showToast(msg, type) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.className = `toast ${type}`;
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'index.html';
+    }
+
+    // Show admin section if role is ADMIN
+    const role = localStorage.getItem('role');
+    if (role === 'ADMIN') {
+        document.getElementById('adminSection').style.display = 'block';
+    }
+
+    async function addFlight() {
+        const flightNumber = document.getElementById('flightNumber').value;
+        const airline = document.getElementById('airline').value;
+        const source = document.getElementById('adminSource').value;
+        const destination = document.getElementById('adminDestination').value;
+        const departureTime = document.getElementById('departureTime').value;
+        const arrivalTime = document.getElementById('arrivalTime').value;
+        const totalSeats = document.getElementById('totalSeats').value;
+        const price = document.getElementById('flightPrice').value;
+
+        if (!flightNumber || !airline || !source || !destination
+            || !departureTime || !arrivalTime || !totalSeats || !price) {
+            showToast('Please fill all flight details', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:8080/api/admin/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    flightNumber,
+                    airline,
+                    source,
+                    destination,
+                    departureTime: departureTime + ':00',
+                    arrivalTime: arrivalTime + ':00',
+                    totalSeats: parseInt(totalSeats),
+                    price: parseFloat(price)
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showToast('Flight added successfully!', 'success');
+                // clear form
+                document.getElementById('flightNumber').value = '';
+                document.getElementById('airline').value = '';
+                document.getElementById('adminSource').value = '';
+                document.getElementById('adminDestination').value = '';
+                document.getElementById('departureTime').value = '';
+                document.getElementById('arrivalTime').value = '';
+                document.getElementById('totalSeats').value = '';
+                document.getElementById('flightPrice').value = '';
+            } else {
+                showToast(data.message || 'Failed to add flight', 'error');
+            }
+        } catch (error) {
+            showToast('Server error', 'error');
+        }
+    }
+</script>
+</body>
+</html>
