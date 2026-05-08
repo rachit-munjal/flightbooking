@@ -63,3 +63,5 @@ build/
 # Temporary
 *.tmp
 *.swp
+
+logs
